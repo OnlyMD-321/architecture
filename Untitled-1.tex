@@ -1,0 +1,1666 @@
+% ============================================================
+% DOCUMENTATION COMPLÈTE
+% Système de Gestion des Ressources Matérielles (S-GRM)
+% ------------------------------------------------------------
+% Livrable 1 : Cahier des Charges Fonctionnel (CDC)
+% Livrable 2 : Document d'Architecture Technique (DAT)
+% ============================================================
+% Compilation : pdflatex (au moins 2 passes pour la TOC)
+%               + plantuml externe pour générer les images
+%               (les codes PlantUML sont fournis en lstlisting)
+% ============================================================
+
+\documentclass[a4paper,11pt,openany]{report}
+
+% --- Encodage et langue ---
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+
+% --- Mise en page ---
+\usepackage[a4paper,top=2.5cm,bottom=2.5cm,left=2.7cm,right=2.7cm]{geometry}
+\usepackage{setspace}
+\onehalfspacing
+\usepackage{parskip}
+
+% --- Tableaux et listes ---
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{multirow}
+\usepackage{enumitem}
+
+% --- Couleurs et boîtes ---
+\usepackage{xcolor}
+\definecolor{bleuFac}{RGB}{26,54,93}
+\definecolor{bleuClair}{RGB}{43,108,176}
+\definecolor{grisCode}{RGB}{245,247,250}
+\definecolor{grisFonce}{RGB}{74,85,104}
+
+% --- Code source / PlantUML ---
+\usepackage{listings}
+\lstset{
+  basicstyle=\ttfamily\footnotesize,
+  backgroundcolor=\color{grisCode},
+  frame=single,
+  rulecolor=\color{grisFonce},
+  breaklines=true,
+  breakatwhitespace=true,
+  showstringspaces=false,
+  numbers=left,
+  numberstyle=\tiny\color{grisFonce},
+  stepnumber=1,
+  tabsize=2,
+  captionpos=b,
+  keywordstyle=\color{bleuClair}\bfseries,
+  commentstyle=\color{grisFonce}\itshape,
+  stringstyle=\color{bleuFac},
+  morekeywords={start,stop,if,then,else,endif,actor,participant,
+    boundary,control,entity,database,node,component,package,class,
+    abstract,extends,implements,interface,note,activate,deactivate,
+    return,end,split,fork,merge,detach,partition,group,alt,opt,
+    loop,parallel,break,destroy,create,ref,over,right,left,of,
+    use,extend,include,as,@startuml,@enduml,@startsalt,@startmindmap,
+    skinparam,title,header,footer,legend,top,bottom,center}
+}
+
+% --- Liens hypertextes ---
+\usepackage[colorlinks=true,linkcolor=bleuFac,
+            urlcolor=bleuClair,citecolor=bleuClair]{hyperref}
+
+% --- Mise en forme des titres ---
+\usepackage{titlesec}
+\titleformat{\chapter}[display]
+  {\normalfont\Huge\bfseries\color{bleuFac}}
+  {\chaptertitlename\ \thechapter}{20pt}{\Huge}
+\titleformat{\section}
+  {\normalfont\Large\bfseries\color{bleuFac}}{\thesection}{1em}{}
+\titleformat{\subsection}
+  {\normalfont\large\bfseries\color{bleuClair}}{\thesubsection}{1em}{}
+
+% --- En-têtes et pieds de page ---
+\usepackage{fancyhdr}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small\itshape S-GRM — Faculté}
+\fancyhead[R]{\small\itshape\nouppercase\leftmark}
+\fancyfoot[C]{\thepage}
+\renewcommand{\headrulewidth}{0.4pt}
+
+% --- Macros utilitaires ---
+\newcommand{\ressource}{\textsc{Ressource}}
+\newcommand{\fournisseur}{\textsc{Fournisseur}}
+\newcommand{\constat}{\textsc{Constat de Panne}}
+\newcommand{\mad}{MAD}
+
+\begin{document}
+
+% ============================================================
+% PAGE DE GARDE
+% ============================================================
+\begin{titlepage}
+  \centering
+  \vspace*{1.5cm}
+  {\Large\bfseries Faculté des Sciences --- Université Privée \par}
+  \vspace{0.4cm}
+  {\large Filière Master 1 --- Architecture Logicielle\par}
+  \vspace{2cm}
+
+  \rule{\linewidth}{1pt}
+  \vspace{0.4cm}
+  {\Huge\bfseries\color{bleuFac}
+    Système de Gestion \\[0.3cm] des Ressources Matérielles\par}
+  \vspace{0.4cm}
+  \rule{\linewidth}{1pt}
+
+  \vspace{1.5cm}
+  {\LARGE\itshape Documentation Technique et Conceptuelle\par}
+  \vspace{0.5cm}
+  {\Large Cahier des Charges Fonctionnel \\
+          \& \\
+          Document d'Architecture Technique\par}
+
+  \vfill
+  \begin{tabular}{rl}
+    \textbf{Auteur}        & : Équipe projet S-GRM \\
+    \textbf{Encadrant}     & : Professeur d'Architecture Logicielle \\
+    \textbf{Année}         & : 2025--2026 \\
+    \textbf{Version}       & : 1.0 \\
+    \textbf{Statut}        & : Document validé \\
+  \end{tabular}
+
+  \vspace{1cm}
+  {\large\today\par}
+\end{titlepage}
+
+% ============================================================
+% TABLE DES MATIÈRES
+% ============================================================
+\tableofcontents
+\listoftables
+\listoffigures
+
+% ============================================================
+% RÉSUMÉ EXÉCUTIF
+% ============================================================
+\chapter*{Résumé exécutif}
+\addcontentsline{toc}{chapter}{Résumé exécutif}
+
+Le présent document constitue la documentation officielle du
+\textbf{Système de Gestion des Ressources Matérielles} (S-GRM)
+destiné à la \textbf{Faculté}. Le système couvre l'intégralité du
+cycle de vie du matériel informatique : depuis l'expression
+des besoins par les chefs de département, jusqu'à la mise au rebut
+des équipements défaillants, en passant par la procédure d'appel
+d'offres avec les fournisseurs, l'attribution physique des
+matériels (ordinateurs et imprimantes) aux entités utilisatrices,
+et enfin le suivi rigoureux des opérations de maintenance.
+
+Cette documentation est structurée en deux parties principales.
+La première partie correspond au \textbf{cahier des charges
+fonctionnel} ; elle établit le contrat fonctionnel entre la
+maîtrise d'ouvrage (la Faculté) et la maîtrise d'œuvre (l'équipe
+projet) en formalisant les exigences métier, les acteurs, les
+processus et les cas d'utilisation. La seconde partie correspond
+au \textbf{Document d'Architecture Technique} (DAT) ; elle
+présente les choix techniques retenus pour la mise en œuvre du
+système, justifie l'adoption d'une architecture trois-tiers
+fondée sur la stack \textsc{PERN} (PostgreSQL, Express.js, React,
+Node.js), et détaille la modélisation orientée-objet sous forme de
+diagrammes UML.
+
+L'ensemble du présent document a été rédigé selon les standards
+académiques en vigueur. Les diagrammes sont fournis en notation
+\textbf{PlantUML}, ce qui permet leur génération automatisée et
+leur révision collaborative dans un système de gestion de versions.
+
+\part{Cahier des Charges Fonctionnel}
+
+% ============================================================
+% CHAPITRE 1 — CONTEXTE & ACTEURS
+% ============================================================
+\chapter{Contexte du projet et description des acteurs}
+
+\section{Contexte général et motivation du projet}
+
+La \textbf{Faculté} a connu, ces dernières années, une croissance
+continue de son parc informatique consécutive à la multiplication
+des programmes de formation, à la numérisation de l'enseignement
+et à la modernisation des laboratoires de recherche. Cette
+croissance s'est accompagnée d'une diversification accrue des
+matériels gérés (ordinateurs portables, ordinateurs fixes,
+imprimantes laser, imprimantes multifonctions) ainsi que d'une
+multiplication des intervenants : départements pédagogiques,
+enseignants-chercheurs, fournisseurs accrédités, prestataires de
+maintenance externes, etc.
+
+Dans ce contexte, la gestion administrative \emph{ad hoc} qui
+prévalait jusqu'ici (tableurs, courriels et registres papier)
+montre désormais ses limites : pertes de traçabilité, doublons
+d'inventaire, lenteur de traitement des appels d'offres,
+difficulté à identifier les fournisseurs récurrents en défaut, et
+manque de visibilité sur le taux de panne par catégorie de
+matériel. La direction de la Faculté a donc commandité la
+conception d'un \textbf{Système d'Information dédié à la gestion
+des ressources matérielles}, désigné par le sigle \textbf{S-GRM}
+dans la suite du document.
+
+\section{Objectifs stratégiques du projet}
+
+Le projet S-GRM poursuit cinq objectifs stratégiques majeurs,
+hiérarchisés ci-dessous par ordre d'importance décroissante~:
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Centraliser} l'ensemble des informations relatives
+    au parc matériel sur une plateforme unique, accessible aux
+    parties prenantes selon des droits différenciés.
+  \item \textbf{Tracer} de manière auditable chaque événement
+    significatif du cycle de vie d'un équipement : commande,
+    livraison, affectation, panne, réparation, mise au rebut.
+  \item \textbf{Fluidifier} les processus achats en automatisant
+    les étapes répétitives (création d'appels d'offres, comparaison
+    chiffrée, blacklistage automatique en cas de récidive).
+  \item \textbf{Sécuriser} les transactions et les données
+    sensibles (offres financières chiffrées en \mad, identités
+    des responsables, historique des décisions).
+  \item \textbf{Aider à la décision} en fournissant des
+    indicateurs consolidés (budgets consommés, taux de panne,
+    note moyenne d'un fournisseur, durée moyenne de réparation).
+\end{enumerate}
+
+\section{Périmètre fonctionnel}
+
+Le périmètre couvert par S-GRM se décompose en trois grands
+modules transverses, étroitement intégrés mais cohérents sur le
+plan métier~:
+
+\begin{itemize}
+  \item \textbf{Module Achats (Procurement).} Recueil des besoins
+    matériels par département, création d'appels d'offres,
+    soumission d'offres par les fournisseurs (date de livraison,
+    garantie, prix unitaire et total en \mad), comparaison des
+    propositions, sélection du moins-disant qualifié, gestion
+    de la liste noire des fournisseurs défaillants.
+  \item \textbf{Module Affectation (Allocation).} Catégorisation
+    des matériels (ordinateurs, imprimantes), saisie des
+    spécifications techniques propres à chaque type, attribution
+    d'un code-barres d'inventaire unique, affectation à un
+    département ou directement à un enseignant nommément désigné.
+  \item \textbf{Module Maintenance.} Signalement des pannes par
+    les enseignants utilisateurs, rédaction par les techniciens
+    d'un \constat{} comportant explication, date d'apparition,
+    fréquence (rare, fréquente, permanente) et type (logiciel ou
+    matériel), avec la règle particulière que les pannes
+    d'imprimante sont strictement de nature matérielle.
+\end{itemize}
+
+Sont \textbf{hors périmètre} de la première version~: la gestion
+de la comptabilité générale de la Faculté (qui demeure dans le
+système ERP existant), la gestion des stocks de consommables
+(toner, papier), et la gestion des contrats de maintenance
+externalisés.
+
+\section{Présentation détaillée des acteurs}
+
+Cinq acteurs métier interagissent avec le S-GRM. Chacun dispose
+d'un profil de droits spécifique, conçu selon le principe du
+\emph{moindre privilège} (\textit{principle of least privilege})
+et révisable à tout moment par le Responsable des ressources.
+
+\subsection{Le Responsable des ressources}
+
+Le Responsable des ressources est l'acteur \textbf{pivot} du
+système. Il représente la direction administrative de la Faculté
+en matière de gestion matérielle.
+
+\paragraph{Droits et responsabilités principales.}
+\begin{itemize}
+  \item Création, modification et clôture des appels d'offres.
+  \item Inscription, modification et suppression des
+    fournisseurs dans le référentiel.
+  \item Mise sur \textbf{liste noire} d'un fournisseur, sous
+    réserve d'apporter un \textbf{motif détaillé} formellement
+    enregistré dans le système (par exemple : retards
+    systématiques, livraison de matériel non conforme, faillite,
+    non-respect de la garantie).
+  \item Sélection finale, parmi les offres recevables, du
+    \textbf{moins-disant qualifié} dans le respect du règlement
+    interne des marchés publics universitaires.
+  \item Validation des bons de réception et déclenchement de
+    l'affectation des matériels reçus.
+  \item Consultation transverse de tous les modules (achats,
+    affectation, maintenance) avec accès en lecture intégrale.
+\end{itemize}
+
+\paragraph{Limites.} Le Responsable n'a pas vocation à
+\emph{rédiger} les constats de panne (rôle du Technicien) ni à
+\emph{exprimer} directement les besoins matériels (rôle des Chefs
+de département). Cette séparation des responsabilités garantit
+l'indépendance hiérarchique et la traçabilité des décisions.
+
+\subsection{Le Chef de département}
+
+Chaque département pédagogique de la Faculté (Informatique,
+Mathématiques, Physique, Économie, etc.) est dirigé par un Chef
+de département, dont le rôle dans le S-GRM est central pour
+l'expression du besoin.
+
+\paragraph{Droits et responsabilités principales.}
+\begin{itemize}
+  \item Consultation du budget annuel d'investissement matériel
+    alloué au département (en \mad).
+  \item Saisie et consolidation des besoins matériels remontés
+    par les enseignants du département (par exemple~: « 12
+    ordinateurs portables i7 16~Go pour la salle TP-3~»).
+  \item Validation hiérarchique des demandes avant transmission
+    au Responsable des ressources.
+  \item Consultation des affectations en cours sur les ressources
+    rattachées au département.
+  \item Consultation de l'historique des constats de panne
+    affectant les ressources du département, à des fins de
+    pilotage qualitatif.
+\end{itemize}
+
+\paragraph{Limites.} Le Chef de département ne sélectionne pas
+les fournisseurs et ne signe pas de bon de commande. Il ne peut
+pas consulter les offres d'autres départements. Il n'a pas accès
+aux fonctions de blacklistage.
+
+\subsection{L'Enseignant}
+
+L'Enseignant est l'utilisateur final de la grande majorité des
+ressources matérielles individuelles (ordinateur de bureau,
+ordinateur portable, imprimante personnelle ou partagée).
+
+\paragraph{Droits et responsabilités principales.}
+\begin{itemize}
+  \item Consultation des ressources qui lui sont nominativement
+    affectées (avec leurs spécifications complètes et leur
+    code-barres d'inventaire).
+  \item \textbf{Signalement d'une panne} sur l'une des ressources
+    qui lui sont affectées : description initiale, gravité
+    perçue, conditions d'apparition.
+  \item Suivi de l'avancement de la prise en charge par les
+    techniciens (statut~: signalée, prise en charge, en cours
+    de réparation, résolue).
+  \item Confirmation de la résolution effective d'une panne après
+    intervention, ou ré-ouverture d'un constat en cas de récidive.
+\end{itemize}
+
+\paragraph{Limites.} L'Enseignant ne peut pas réaffecter une
+ressource à un collègue ; il ne peut ni rédiger ni clôturer un
+\constat{} (rôle du Technicien) ; il ne peut pas non plus
+exprimer directement un besoin de nouveau matériel auprès du
+Responsable~: cette demande remonte par le canal de son Chef de
+département.
+
+\subsection{Le Fournisseur}
+
+Le Fournisseur est un acteur \textbf{externe} à la Faculté qui
+intervient dans le cadre des procédures d'achat. Il accède au
+système par un portail dédié, après inscription validée par le
+Responsable des ressources.
+
+\paragraph{Droits et responsabilités principales.}
+\begin{itemize}
+  \item Inscription en ligne avec saisie obligatoire des champs~:
+    raison sociale, ville/localisation, adresse postale complète,
+    \textbf{site web} officiel, et \textbf{nom du responsable
+    commercial} interlocuteur de la Faculté.
+  \item Consultation des appels d'offres ouverts auxquels il est
+    autorisé à participer.
+  \item \textbf{Soumission d'une offre} pour un appel d'offres,
+    comportant obligatoirement~: la \textbf{date de livraison}
+    proposée, la \textbf{durée de garantie} en mois, la
+    \textbf{marque} et les caractéristiques précises du matériel
+    proposé, le \textbf{prix unitaire en \mad}, et le
+    \textbf{prix total en \mad} après calcul automatique.
+  \item Consultation de l'historique de ses propres soumissions
+    et de leur statut (acceptée, rejetée, retenue).
+\end{itemize}
+
+\paragraph{Limites.} Un Fournisseur dont le statut est
+\textbf{liste noire} se voit refuser toute soumission d'offre
+nouvelle de manière automatique par le système. Il peut
+néanmoins consulter le motif détaillé de son blacklistage ainsi
+que ses anciennes offres archivées. Il ne dispose d'aucun accès
+aux modules d'affectation et de maintenance.
+
+\subsection{Le Technicien de maintenance}
+
+Le Technicien de maintenance est l'opérateur technique chargé
+d'intervenir physiquement sur les équipements en panne. Il peut
+être interne à la Faculté ou rattaché à un prestataire externe
+sous contrat.
+
+\paragraph{Droits et responsabilités principales.}
+\begin{itemize}
+  \item Consultation de la file des pannes signalées,
+    triable par urgence, fréquence et type de matériel.
+  \item Prise en charge d'un signalement et passage du statut à
+    « en cours de diagnostic ».
+  \item \textbf{Rédaction du \constat} comportant : explication
+    technique détaillée, date d'apparition, fréquence (rare,
+    fréquente, permanente), et type (logiciel ou matériel), avec
+    la \textbf{règle métier intangible} suivante : pour une
+    ressource de type \emph{Imprimante}, la nature de la panne
+    est \textbf{exclusivement matérielle}.
+  \item Mise à jour de l'état de la ressource (en panne, en
+    réparation, hors service, remise en service).
+  \item Clôture du \constat{} avec saisie de la solution apportée
+    et de la durée d'intervention.
+\end{itemize}
+
+\paragraph{Limites.} Le Technicien ne peut ni affecter ni
+réaffecter une ressource à un département/enseignant. Il n'a
+aucun accès au module Achats. Il ne peut pas modifier
+arbitrairement le statut d'un Fournisseur.
+
+\section{Hypothèses, contraintes et exclusions}
+
+\subsection{Hypothèses}
+\begin{itemize}
+  \item L'authentification des utilisateurs internes (Responsable,
+    Chef, Enseignant, Technicien) s'appuie sur l'annuaire
+    institutionnel existant (LDAP/Active Directory).
+  \item L'authentification des Fournisseurs est gérée localement
+    par S-GRM avec mots de passe robustes.
+  \item Le réseau interne de la Faculté est considéré comme de
+    confiance pour les connexions aux services applicatifs.
+\end{itemize}
+
+\subsection{Contraintes techniques}
+\begin{itemize}
+  \item Toutes les transactions financières sont libellées
+    \textbf{exclusivement en Dirhams marocains (\mad)}.
+  \item L'interface utilisateur est intégralement \textbf{en
+    français}.
+  \item L'application doit être déployable sur des serveurs
+    \textbf{Linux} via \textbf{Docker}.
+\end{itemize}
+
+\subsection{Exclusions}
+\begin{itemize}
+  \item Pas de gestion comptable analytique.
+  \item Pas de gestion des consommables (toner, papier, câbles).
+  \item Pas de gestion des bâtiments ni des salles (la salle
+    associée à une ressource est un simple champ texte).
+\end{itemize}
+
+% ============================================================
+% CHAPITRE 2 — EXIGENCES
+% ============================================================
+\chapter{Exigences fonctionnelles et non-fonctionnelles}
+
+\section{Préambule méthodologique}
+
+Conformément à la norme \emph{IEEE~830-1998} relative à la
+spécification d'exigences logicielles, chaque exigence est
+identifiée par un code unique de la forme \texttt{EF-Mxx} pour
+les exigences fonctionnelles (où \texttt{M} désigne le module et
+\texttt{xx} le numéro séquentiel), et \texttt{ENF-yy} pour les
+exigences non-fonctionnelles. Chaque exigence est en outre
+qualifiée par un niveau de priorité~: \textbf{[B]} bloquante,
+\textbf{[E]} essentielle, \textbf{[S]} souhaitable.
+
+\section{Exigences fonctionnelles --- Module Achats (A)}
+
+\subsection{Gestion du référentiel fournisseur}
+
+\begin{description}[leftmargin=*]
+  \item[\texttt{EF-A01} {[B]}] Le système doit permettre au
+    Responsable d'inscrire un nouveau fournisseur en saisissant,
+    au minimum, les champs suivants~: raison sociale, ville,
+    adresse postale complète, URL du site web officiel, nom du
+    responsable commercial.
+  \item[\texttt{EF-A02} {[B]}] Le système doit permettre au
+    Responsable de \emph{désactiver} un fournisseur sans le
+    supprimer (conservation pour audit).
+  \item[\texttt{EF-A03} {[B]}] Le système doit permettre au
+    Responsable de placer un fournisseur sur \textbf{liste noire}
+    en saisissant un \textbf{motif obligatoire} d'au moins
+    cinquante (50) caractères. Toute tentative de blacklistage
+    sans motif doit être refusée par le serveur.
+  \item[\texttt{EF-A04} {[E]}] Le système doit permettre la
+    réhabilitation d'un fournisseur précédemment blacklisté,
+    sous réserve de saisir un motif de réhabilitation et la
+    signature électronique du Responsable.
+\end{description}
+
+\subsection{Cycle de vie d'un appel d'offres}
+
+\begin{description}[leftmargin=*]
+  \item[\texttt{EF-A10} {[B]}] Le système doit permettre la
+    création d'un appel d'offres avec~: titre, description
+    technique, quantité, budget plafond en \mad, date de
+    clôture, type de ressource attendue.
+  \item[\texttt{EF-A11} {[B]}] Le système doit permettre à un
+    fournisseur \emph{actif} de soumettre une offre comportant~:
+    date de livraison, durée de garantie en mois, marque, prix
+    unitaire en \mad, et prix total en \mad{} (calculé).
+  \item[\texttt{EF-A12} {[B]}] Le système doit \textbf{refuser}
+    automatiquement toute offre soumise par un fournisseur dont
+    le statut courant est \textit{liste noire}, sans recours
+    possible.
+  \item[\texttt{EF-A13} {[B]}] Le système doit présenter au
+    Responsable une vue comparative tabulée des offres
+    recevables, triable par prix, garantie ou date de livraison.
+  \item[\texttt{EF-A14} {[E]}] Le système doit permettre au
+    Responsable de désigner le \textbf{moins-disant qualifié}
+    et d'enregistrer dans le journal d'audit le motif de
+    sélection.
+\end{description}
+
+\section{Exigences fonctionnelles --- Module Affectation (F)}
+
+\begin{description}[leftmargin=*]
+  \item[\texttt{EF-F01} {[B]}] Le système doit catégoriser
+    chaque ressource selon les types autorisés~: Ordinateur,
+    Imprimante.
+  \item[\texttt{EF-F02} {[B]}] Pour un Ordinateur, le système
+    doit gérer les attributs spécifiques~: marque, processeur
+    (CPU), mémoire vive (RAM), disque dur (HDD), écran (taille
+    et résolution).
+  \item[\texttt{EF-F03} {[B]}] Pour une Imprimante, le système
+    doit gérer les attributs spécifiques~: marque, vitesse
+    d'impression (pages/minute), résolution (DPI).
+  \item[\texttt{EF-F04} {[B]}] Chaque ressource doit recevoir un
+    \textbf{numéro d'inventaire / code-barres} unique, généré
+    automatiquement par le système et impossible à dupliquer.
+  \item[\texttt{EF-F05} {[B]}] Le système doit permettre
+    d'affecter une ressource à un \textbf{département} (granularité
+    grossière) ou directement à un \textbf{enseignant nommément
+    désigné} (granularité fine).
+  \item[\texttt{EF-F06} {[E]}] Le système doit conserver
+    l'historique complet des affectations passées d'une ressource.
+  \item[\texttt{EF-F07} {[S]}] Le système doit permettre l'export
+    de l'inventaire au format CSV pour l'audit annuel.
+\end{description}
+
+\section{Exigences fonctionnelles --- Module Maintenance (M)}
+
+\begin{description}[leftmargin=*]
+  \item[\texttt{EF-M01} {[B]}] Le système doit permettre à un
+    Enseignant de signaler une panne sur une ressource qui lui
+    est affectée.
+  \item[\texttt{EF-M02} {[B]}] Le système doit permettre à un
+    Technicien de rédiger un \constat{} avec~: explication,
+    date d'apparition, fréquence (\textit{rare},
+    \textit{fréquente}, \textit{permanente}), type
+    (\textit{logiciel} ou \textit{matériel}).
+  \item[\texttt{EF-M03} {[B]}] Le système doit \textbf{rejeter}
+    tout \constat{} dont la ressource est de type Imprimante et
+    dont le type de panne n'est pas \textit{matériel}.
+  \item[\texttt{EF-M04} {[E]}] Le système doit notifier
+    automatiquement l'Enseignant initiateur lorsqu'un constat
+    le concernant change de statut.
+  \item[\texttt{EF-M05} {[E]}] Le système doit permettre de
+    clôturer un constat avec saisie de la solution apportée et
+    de la durée totale d'intervention.
+\end{description}
+
+\section{Exigences non-fonctionnelles}
+
+\subsection{Sécurité (\texttt{ENF-S})}
+\begin{description}[leftmargin=*]
+  \item[\texttt{ENF-S01}] Toute communication entre le client
+    et le serveur doit être chiffrée par TLS~1.2 ou supérieur.
+  \item[\texttt{ENF-S02}] Les mots de passe doivent être stockés
+    sous forme de condensats salés (algorithme \texttt{bcrypt}
+    avec coût $\geq 12$).
+  \item[\texttt{ENF-S03}] Le contrôle d'accès doit être basé sur
+    les rôles (RBAC), conformément aux profils décrits au
+    chapitre 1.
+  \item[\texttt{ENF-S04}] Toute action sensible (création
+    d'appel d'offre, blacklistage, affectation) doit être
+    journalisée dans un journal d'audit infalsifiable.
+\end{description}
+
+\subsection{Performance (\texttt{ENF-P})}
+\begin{description}[leftmargin=*]
+  \item[\texttt{ENF-P01}] Le temps de réponse moyen pour 95~\%
+    des requêtes utilisateur ne doit pas dépasser 800~ms.
+  \item[\texttt{ENF-P02}] Le système doit pouvoir héberger un
+    inventaire de 10\,000 ressources sans dégradation perceptible.
+  \item[\texttt{ENF-P03}] Le système doit supporter au moins
+    100~utilisateurs concurrents en heure de pointe.
+\end{description}
+
+\subsection{Traçabilité (\texttt{ENF-T})}
+\begin{description}[leftmargin=*]
+  \item[\texttt{ENF-T01}] Chaque enregistrement de la base doit
+    porter les colonnes \texttt{date\_creation} et
+    \texttt{date\_modification} renseignées automatiquement.
+  \item[\texttt{ENF-T02}] Aucun enregistrement métier ne doit
+    être supprimé physiquement~: seul le \emph{soft delete}
+    (marqueur \texttt{date\_suppression}) est autorisé.
+  \item[\texttt{ENF-T03}] Le journal d'audit doit conserver
+    l'identité de l'auteur, l'horodatage UTC et la nature de
+    l'action effectuée, pour une durée minimale de cinq ans.
+\end{description}
+
+\subsection{Disponibilité, ergonomie et maintenabilité}
+\begin{description}[leftmargin=*]
+  \item[\texttt{ENF-D01}] Disponibilité cible~: 99{,}5~\% sur
+    plage 8h--20h en jours ouvrables.
+  \item[\texttt{ENF-E01}] L'interface doit respecter les
+    standards d'accessibilité WCAG~2.1 niveau AA.
+  \item[\texttt{ENF-M01}] Le code source doit présenter un taux
+    de couverture de tests automatisés $\geq 70~\%$.
+  \item[\texttt{ENF-M02}] Le déploiement doit être entièrement
+    reproductible via Docker Compose.
+\end{description}
+
+\section{Synthèse des exigences en matrice de criticité}
+
+\begin{longtable}{p{2.5cm} p{8cm} p{1.5cm} p{1.8cm}}
+\toprule
+\textbf{Code} & \textbf{Intitulé synthétique} & \textbf{Module} &
+\textbf{Priorité}\\
+\midrule
+\endhead
+EF-A01 & Inscription d'un fournisseur & Achats & B \\
+EF-A03 & Blacklistage avec motif obligatoire & Achats & B \\
+EF-A11 & Soumission d'une offre chiffrée & Achats & B \\
+EF-A12 & Rejet automatique --- liste noire & Achats & B \\
+EF-A14 & Sélection du moins-disant & Achats & E \\
+EF-F01 & Catégorisation des ressources & Affectation & B \\
+EF-F04 & Code-barres unique d'inventaire & Affectation & B \\
+EF-F05 & Affectation à dpt ou enseignant & Affectation & B \\
+EF-M01 & Signalement d'une panne & Maintenance & B \\
+EF-M02 & Rédaction d'un constat structuré & Maintenance & B \\
+EF-M03 & Imprimante $\Rightarrow$ panne matérielle & Maintenance & B \\
+ENF-S01 & TLS sur tous les flux & Transverse & B \\
+ENF-T03 & Journal d'audit 5 ans & Transverse & E \\
+\bottomrule
+\caption{Synthèse des exigences principales}
+\label{tab:matriceExigences}
+\end{longtable}
+
+% ============================================================
+% CHAPITRE 3 — PROCESSUS BPMN
+% ============================================================
+\chapter{Modélisation des processus métier (BPMN)}
+
+\section{Méthodologie}
+
+Les processus métier sont représentés en notation \emph{Business
+Process Model and Notation} (BPMN~2.0), produite ici sous forme
+de code PlantUML pour permettre une génération automatique des
+visuels. Pour chaque processus, nous fournissons une
+\emph{introduction longue}, une \emph{description textuelle pas
+à pas}, le code PlantUML correspondant, puis un commentaire de
+lecture du diagramme.
+
+\section{Processus 1 --- Appel d'offres}
+
+\subsection{Introduction au processus}
+
+Le processus d'\emph{appel d'offres} constitue le cœur du module
+Achats. Il s'étend depuis la formalisation administrative du
+besoin jusqu'à la notification du fournisseur retenu, en passant
+par la phase critique de comparaison et d'élimination des
+candidatures non conformes. Trois rôles s'y entrecroisent~: le
+Chef de département (qui exprime le besoin), le Responsable des
+ressources (qui pilote l'appel d'offres) et le Fournisseur (qui
+soumet sa proposition financière).
+
+\subsection{Description textuelle pas à pas}
+
+\begin{enumerate}[leftmargin=*]
+  \item Le \textbf{Chef de département} dépose une demande
+    matérielle motivée auprès du Responsable.
+  \item Le \textbf{Responsable} valide ou refuse la demande.
+    En cas de refus, le processus s'arrête.
+  \item En cas de validation, le Responsable rédige et publie
+    un appel d'offres détaillé.
+  \item Les \textbf{Fournisseurs} actifs reçoivent la
+    notification et peuvent consulter l'appel.
+  \item Chaque Fournisseur intéressé soumet son offre
+    (date de livraison, garantie, prix \mad).
+  \item Le système \textbf{rejette automatiquement} toute offre
+    issue d'un fournisseur en \textit{liste noire}.
+  \item À l'issue de la date de clôture, le Responsable
+    consulte les offres recevables, les compare et désigne le
+    moins-disant qualifié.
+  \item Le Responsable notifie le fournisseur retenu et clôt
+    l'appel d'offres.
+\end{enumerate}
+
+\subsection{Code PlantUML --- Diagramme BPMN}
+
+\begin{lstlisting}[caption={Processus BPMN --- Appel d'offres},
+                   label={lst:bpmnAppelOffres}]
+@startuml
+title Processus BPMN : Cycle de vie d'un appel d'offres
+
+|Chef de departement|
+start
+:Exprimer un besoin materiel;
+:Soumettre la demande au Responsable;
+
+|Responsable des ressources|
+:Receptionner la demande;
+if (Demande conforme et budget disponible ?) then (oui)
+  :Rediger l'appel d'offres;
+  :Publier l'appel d'offres;
+else (non)
+  :Refuser la demande;
+  :Notifier le Chef de departement;
+  stop
+endif
+
+|Fournisseur|
+:Consulter les appels d'offres ouverts;
+if (Statut fournisseur = liste_noire ?) then (oui)
+  :Soumission refusee automatiquement;
+  stop
+else (non)
+  :Saisir une offre (livraison, garantie, prix MAD);
+  :Soumettre l'offre;
+endif
+
+|Responsable des ressources|
+:Recevoir et archiver les offres;
+:Comparer les offres recevables;
+:Selectionner le moins-disant qualifie;
+:Notifier le fournisseur retenu;
+:Cloturer l'appel d'offres;
+
+stop
+@enduml
+\end{lstlisting}
+
+\subsection{Lecture du diagramme}
+
+Le diagramme met en évidence trois \emph{swimlanes} matérialisant
+la séparation des responsabilités. Le point de décision sur le
+statut du Fournisseur (\texttt{liste\_noire}) apparaît
+explicitement comme une \emph{passerelle exclusive}~: c'est ici
+que se matérialise l'exigence \texttt{EF-A12}. Toute déviation
+sur cette passerelle (par exemple un contournement applicatif)
+constituerait une violation directe d'une exigence bloquante.
+
+\section{Processus 2 --- Affectation d'une ressource}
+
+\subsection{Introduction au processus}
+
+L'affectation est le processus par lequel une ressource matérielle
+nouvellement acquise (ou démobilisée d'un précédent utilisateur)
+est attribuée à une entité utilisatrice. La granularité de
+l'affectation peut être grossière (un département entier) ou fine
+(un enseignant nommément désigné). Le processus est
+systématiquement précédé d'une étape d'inventoriage générant le
+code-barres unique imposé par l'exigence \texttt{EF-F04}.
+
+\subsection{Code PlantUML --- Diagramme BPMN}
+
+\begin{lstlisting}[caption={Processus BPMN --- Affectation},
+                   label={lst:bpmnAffectation}]
+@startuml
+title Processus BPMN : Affectation d'une ressource
+
+|Responsable des ressources|
+start
+:Receptionner physiquement le materiel;
+:Saisir les specifications (CPU/RAM/HDD ou vitesse/resolution);
+:Generer le code-barres d'inventaire unique;
+:Coller l'etiquette code-barres;
+:Choisir la cible d'affectation;
+
+if (Affectation a un departement ?) then (oui)
+  |Chef de departement|
+  :Valider la prise en charge;
+  :Repartir l'utilisation au sein du departement;
+else (non - enseignant)
+  |Enseignant|
+  :Signer le bon de prise en charge;
+  :Recevoir le materiel;
+endif
+
+|Responsable des ressources|
+:Enregistrer l'historique d'affectation;
+:Cloturer le bon d'affectation;
+stop
+@enduml
+\end{lstlisting}
+
+\subsection{Commentaire}
+
+Le processus se distingue par un \textbf{branchement dual} selon
+la cible. La granularité fine (Enseignant) impose une signature
+explicite, justifiant la traçabilité forte exigée par
+\texttt{ENF-T01}. La génération du code-barres précède
+\emph{toujours} l'affectation, garantissant l'unicité et la
+traçabilité physique.
+
+\section{Processus 3 --- Maintenance d'une ressource}
+
+\subsection{Introduction}
+
+Le processus de maintenance s'amorce dès qu'un Enseignant
+constate un dysfonctionnement. Il se conclut soit par une remise
+en service, soit par une mise au rebut (réforme). La règle
+métier \texttt{EF-M03} (panne d'imprimante exclusivement
+matérielle) trouve son contrôle effectif au moment de la
+rédaction du \constat{} par le Technicien.
+
+\subsection{Code PlantUML --- Diagramme BPMN}
+
+\begin{lstlisting}[caption={Processus BPMN --- Maintenance},
+                   label={lst:bpmnMaintenance}]
+@startuml
+title Processus BPMN : Cycle de maintenance
+
+|Enseignant|
+start
+:Constater un dysfonctionnement;
+:Signaler la panne dans le S-GRM;
+:Decrire les symptomes observes;
+
+|Technicien de maintenance|
+:Recuperer le signalement dans la file;
+:Diagnostiquer la ressource;
+if (Ressource = Imprimante ?) then (oui)
+  :Forcer la nature de panne = MATERIELLE;
+else (non)
+  :Choisir nature = MATERIELLE ou LOGICIELLE;
+endif
+
+:Rediger le Constat de panne;
+:Saisir : explication, date, frequence, type;
+:Mettre la ressource en etat << en_panne >>;
+
+if (Reparation possible ?) then (oui)
+  :Effectuer l'intervention;
+  :Tester la remise en service;
+  :Cloturer le constat avec solution;
+  |Enseignant|
+  :Confirmer la remise en service;
+else (non)
+  |Responsable des ressources|
+  :Decider de la reforme;
+  :Mettre la ressource en etat << reforme >>;
+endif
+stop
+@enduml
+\end{lstlisting}
+
+\subsection{Commentaire}
+
+La passerelle exclusive « Ressource = Imprimante~? » réifie la
+règle \texttt{EF-M03}. Un développement défaillant qui omettrait
+ce contrôle exposerait la Faculté à des incohérences de données
+historiques (statistiques de panne logicielle inappropriées sur
+imprimantes), ce qui justifie la mise en place d'un test
+d'intégration automatisé spécifique (cf. DAT, chapitre 4).
+
+% ============================================================
+% CHAPITRE 4 — CAS D'UTILISATION UML
+% ============================================================
+\chapter{Modélisation fonctionnelle (UML --- Cas d'utilisation)}
+
+\section{Vue d'ensemble}
+
+Le diagramme de cas d'utilisation présenté ci-après synthétise
+l'ensemble des interactions de premier ordre entre les cinq
+acteurs et le système. Les relations \emph{include} et
+\emph{extend} explicitent les dépendances fonctionnelles
+internes. Les cas d'utilisation génériques (authentification,
+journalisation) sont mutualisés entre acteurs.
+
+\section{Code PlantUML --- Diagramme de cas d'utilisation global}
+
+\begin{lstlisting}[caption={Diagramme UML --- Cas d'utilisation global},
+                   label={lst:umlUseCase}]
+@startuml
+title Cas d'utilisation : Systeme de Gestion des Ressources Materielles
+
+left to right direction
+
+actor "Responsable\ndes ressources" as Resp
+actor "Chef de\ndepartement"      as Chef
+actor "Enseignant"                 as Ens
+actor "Fournisseur"                as Four
+actor "Technicien de\nmaintenance" as Tech
+
+rectangle "Systeme S-GRM" {
+
+  usecase "S'authentifier"               as UC_Auth
+  usecase "Consulter le tableau de bord" as UC_Dash
+
+  package "Module Achats" {
+    usecase "Inscrire un fournisseur"     as UC_InscFour
+    usecase "Mettre un fournisseur\nsur liste noire (avec motif)" as UC_BL
+    usecase "Creer un appel d'offres"     as UC_CrAO
+    usecase "Soumettre une offre"         as UC_SubOffre
+    usecase "Comparer les offres"         as UC_Comp
+    usecase "Selectionner le\nmoins-disant" as UC_Selec
+  }
+
+  package "Module Affectation" {
+    usecase "Cataloguer une ressource"      as UC_Cat
+    usecase "Generer un code-barres"        as UC_CB
+    usecase "Affecter a un departement"     as UC_AffDept
+    usecase "Affecter a un enseignant"      as UC_AffEns
+    usecase "Consulter ses ressources"      as UC_Mes
+  }
+
+  package "Module Maintenance" {
+    usecase "Signaler une panne"               as UC_Sig
+    usecase "Rediger un Constat de panne"      as UC_Const
+    usecase "Cloturer un Constat"              as UC_CloseC
+    usecase "Confirmer la remise en service"   as UC_Conf
+  }
+}
+
+' Acteurs vers cas d'utilisation
+Resp --> UC_InscFour
+Resp --> UC_BL
+Resp --> UC_CrAO
+Resp --> UC_Comp
+Resp --> UC_Selec
+Resp --> UC_Cat
+Resp --> UC_CB
+Resp --> UC_AffDept
+Resp --> UC_AffEns
+
+Chef --> UC_AffDept
+Chef --> UC_Dash
+
+Ens --> UC_Mes
+Ens --> UC_Sig
+Ens --> UC_Conf
+
+Four --> UC_SubOffre
+
+Tech --> UC_Const
+Tech --> UC_CloseC
+
+' Relations
+UC_InscFour ..> UC_Auth : <<include>>
+UC_BL       ..> UC_Auth : <<include>>
+UC_CrAO     ..> UC_Auth : <<include>>
+UC_SubOffre ..> UC_Auth : <<include>>
+UC_Const    ..> UC_Auth : <<include>>
+UC_Sig      ..> UC_Auth : <<include>>
+
+UC_Cat      ..> UC_CB   : <<include>>
+UC_Selec    ..> UC_BL   : <<extend>>
+
+@enduml
+\end{lstlisting}
+
+\section{Descriptions textuelles longues des cas d'utilisation}
+
+\subsection{UC-01 : Soumettre une offre}
+\begin{description}[leftmargin=*]
+  \item[Acteur principal] Fournisseur.
+  \item[Précondition] Le fournisseur est authentifié et son
+    statut courant est \emph{actif} (non blacklisté).
+  \item[Scénario nominal]
+    \begin{enumerate}
+      \item Le fournisseur sélectionne un appel d'offres ouvert.
+      \item Il remplit le formulaire d'offre~: date de
+        livraison, durée de garantie, marque, prix unitaire en
+        \mad, prix total en \mad.
+      \item Le système valide la cohérence des champs (prix
+        positifs, date de livraison antérieure ou égale à la
+        date de clôture acceptée).
+      \item Le système enregistre l'offre et notifie le
+        Responsable.
+    \end{enumerate}
+  \item[Scénario alternatif A1] Le fournisseur est blacklisté~:
+    le serveur retourne une erreur 400 sans persister l'offre.
+  \item[Scénario alternatif A2] Le prix saisi est négatif~: le
+    formulaire affiche un message d'erreur de validation.
+  \item[Postcondition] L'offre figure dans la liste comparative
+    consultable par le Responsable.
+\end{description}
+
+\subsection{UC-02 : Mettre un fournisseur sur liste noire}
+\begin{description}[leftmargin=*]
+  \item[Acteur principal] Responsable des ressources.
+  \item[Précondition] Le fournisseur existe dans le référentiel
+    et son statut courant est \emph{actif}.
+  \item[Scénario nominal]
+    \begin{enumerate}
+      \item Le Responsable ouvre la fiche du fournisseur
+        concerné.
+      \item Il sélectionne l'action \emph{Mettre sur liste
+        noire}.
+      \item Il saisit un motif détaillé (au moins 50 caractères).
+      \item Le système enregistre le statut \texttt{liste\_noire}
+        et le motif, puis met à jour la date de modification.
+      \item Le système informe l'auditeur via le journal
+        d'audit.
+    \end{enumerate}
+  \item[Scénario alternatif] Si le motif est vide ou trop court,
+    le système retourne une erreur de validation HTTP 400.
+\end{description}
+
+\subsection{UC-03 : Rédiger un constat de panne}
+\begin{description}[leftmargin=*]
+  \item[Acteur principal] Technicien de maintenance.
+  \item[Précondition] Une panne a été signalée par un
+    Enseignant et a été prise en charge.
+  \item[Scénario nominal]
+    \begin{enumerate}
+      \item Le Technicien ouvre le signalement.
+      \item Il diagnostique la ressource physiquement.
+      \item Il sélectionne la nature de panne (logicielle ou
+        matérielle).
+      \item Il renseigne fréquence, date d'apparition et
+        explication.
+      \item Le système valide la règle « Imprimante $\Rightarrow$
+        matérielle » côté serveur.
+      \item Le système persiste le constat et fait passer la
+        ressource en état \emph{en\_panne}.
+    \end{enumerate}
+  \item[Scénario alternatif] Si la ressource est de type
+    Imprimante et que la nature saisie est \emph{logicielle}, le
+    serveur renvoie HTTP 400 sans persister le constat.
+\end{description}
+
+\subsection{UC-04 : Affecter une ressource}
+\begin{description}[leftmargin=*]
+  \item[Acteur principal] Responsable des ressources.
+  \item[Précondition] La ressource est inventoriée
+    (code-barres généré) et n'est pas en panne.
+  \item[Scénario nominal]
+    \begin{enumerate}
+      \item Le Responsable sélectionne la ressource.
+      \item Il choisit la cible d'affectation~: un département
+        ou un enseignant.
+      \item Le système crée l'enregistrement d'affectation et
+        archive l'éventuelle affectation précédente.
+      \item L'enseignant est notifié.
+    \end{enumerate}
+\end{description}
+
+\subsection{UC-05 : Signaler une panne}
+\begin{description}[leftmargin=*]
+  \item[Acteur principal] Enseignant.
+  \item[Précondition] L'enseignant est affecté à la ressource.
+  \item[Scénario nominal]
+    \begin{enumerate}
+      \item L'enseignant sélectionne sa ressource en panne.
+      \item Il décrit le symptôme constaté.
+      \item Il indique une éventuelle gravité ressentie.
+      \item Le système enregistre le signalement et notifie
+        les techniciens.
+    \end{enumerate}
+\end{description}
+
+\part{Document d'Architecture Technique}
+
+% ============================================================
+% CHAPITRE 1 — Présentation de l'architecture
+% ============================================================
+\chapter{Présentation et justification de l'architecture}
+
+\section{Vue d'ensemble : architecture trois-tiers}
+
+L'architecture retenue pour S-GRM est une \textbf{architecture
+trois-tiers} (\emph{three-tier architecture}), modèle de
+référence pour les applications web modernes. Cette segmentation
+horizontale en trois couches répond directement à plusieurs des
+exigences non-fonctionnelles formulées au chapitre 2 du cahier
+des charges, en particulier la maintenabilité (\texttt{ENF-M01})
+et la performance (\texttt{ENF-P02}).
+
+\begin{itemize}
+  \item \textbf{Tier 1 --- Présentation.} Interface utilisateur
+    en \textbf{React}, exécutée dans le navigateur. Elle prend
+    en charge le rendu, l'ergonomie, la validation
+    intermédiaire des saisies et l'expérience utilisateur (UX).
+  \item \textbf{Tier 2 --- Logique applicative.} Serveur
+    \textbf{Node.js / Express.js} exposant une API REST. Il
+    embarque la totalité des règles de gestion (validation des
+    blacklists, contrôle imprimante = matérielle, calculs de
+    prix, etc.) et orchestre les transactions vers la base de
+    données.
+  \item \textbf{Tier 3 --- Persistance.} Base de données
+    relationnelle \textbf{PostgreSQL}, choisie pour la richesse
+    de son SQL et la robustesse de ses garanties ACID.
+\end{itemize}
+
+\section{Justification du choix de la stack PERN}
+
+Le sigle \textbf{PERN} désigne l'association
+\textbf{P}ostgreSQL, \textbf{E}xpress, \textbf{R}eact,
+\textbf{N}ode.js. Plusieurs raisons motivent ce choix dans le
+contexte académique de la Faculté.
+
+\subsection{Pourquoi PostgreSQL ?}
+
+PostgreSQL est aujourd'hui considéré comme le système de gestion
+de base de données relationnelles open source le plus avancé.
+Son adoption pour le projet repose sur cinq piliers~:
+
+\begin{enumerate}
+  \item \textbf{Transactionnel ACID complet.} L'écriture d'un
+    \constat{} et la mise à jour conjointe de l'état de la
+    ressource doivent être atomiques pour éviter les
+    incohérences. PostgreSQL offre un support transactionnel de
+    référence (sérialisable, lecture consistante des snapshots).
+  \item \textbf{Types riches.} Les colonnes \texttt{JSONB} sont
+    utilisées pour stocker les spécifications techniques
+    polymorphes des ressources (CPU/RAM/HDD pour un ordinateur,
+    vitesse/résolution pour une imprimante) sans recourir à une
+    table fille par sous-classe, tout en conservant
+    l'indexabilité.
+  \item \textbf{Contraintes intégrées.} Les types \texttt{ENUM}
+    permettent de matérialiser au niveau de la base les statuts
+    \texttt{actif/liste\_noire} et \texttt{disponible/en\_panne/
+    \ldots}, défendant ainsi les invariants même en cas de bug
+    applicatif.
+  \item \textbf{Open source et libre.} Aucune redevance, ce qui
+    convient parfaitement à un budget académique.
+  \item \textbf{Écosystème mature.} Excellents pilotes Node
+    (\texttt{pg}, \texttt{sequelize}), nombreux outils
+    d'administration (\texttt{pgAdmin}), procédures de
+    sauvegarde éprouvées.
+\end{enumerate}
+
+\subsection{Pourquoi Express.js ?}
+
+Express est le \emph{de facto} standard pour bâtir des API REST
+en Node.js. Sa philosophie minimaliste laisse libre le choix des
+middlewares (CORS, parsing JSON, journalisation), ce qui
+favorise une compréhension fine de la pile par les étudiants.
+Son modèle d'intergiciels enchaînés (\emph{middleware pipeline})
+se prête particulièrement bien à l'application transverse de
+règles non-fonctionnelles : authentification, journal d'audit,
+limitation de débit.
+
+\subsection{Pourquoi React ?}
+
+React, avec ses \emph{hooks} (\texttt{useState},
+\texttt{useEffect}, \texttt{useCallback}), permet une
+modélisation déclarative et composable de l'interface. Le pattern
+de composants fonctionnels purs facilite la réutilisation et le
+test unitaire (par exemple via \texttt{Jest} et \texttt{React
+Testing Library}). Pour le S-GRM, la décomposition naturelle est
+\texttt{InventaireRessources}, \texttt{ListeFournisseurs},
+\texttt{FormulaireRessource}, etc., avec un service \texttt{api}
+mutualisé.
+
+\subsection{Pourquoi Node.js ?}
+
+Le partage du langage JavaScript entre frontend et backend
+réduit la charge cognitive de l'équipe, mutualise certains
+utilitaires (validation, formats de date) et facilite la
+montée en compétences. Le modèle d'événements non bloquants de
+Node convient à un système majoritairement IO-bound (lectures
+BD, appels HTTP).
+
+\subsection{Cohérence transverse de la stack}
+
+L'unification du langage, la portabilité Linux/Windows/macOS,
+l'écosystème npm très riche et la conteneurisation aisée via
+Docker rendent PERN homogène, raisonnablement performante,
+maintenable, et bien adaptée à un projet académique de cette
+envergure.
+
+\section{Patrons d'architecture employés}
+
+\begin{description}[leftmargin=*]
+  \item[Modèle--Vue--Contrôleur (MVC).] La couche Express
+    applique strictement la séparation Routes $\rightarrow$
+    Contrôleurs $\rightarrow$ Services $\rightarrow$ Dépôts
+    $\rightarrow$ Modèles, qui évite tout couplage entre
+    transport HTTP et logique métier.
+  \item[Repository.] L'accès aux données est encapsulé dans des
+    classes \texttt{DepotXxx}, ce qui permet de changer
+    ultérieurement la couche de persistance sans toucher aux
+    services.
+  \item[Factory Method.] La fabrique \texttt{FabriqueRessource}
+    construit les bons objets selon le type (Ordinateur ou
+    Imprimante), encapsulant les validations propres à chaque
+    sous-type.
+  \item[Singleton.] La classe \texttt{BaseDeDonnees} expose une
+    instance unique de \texttt{Sequelize} pour éviter la
+    multiplication des connexions.
+\end{description}
+
+% ============================================================
+% CHAPITRE 2 — Modélisation des données
+% ============================================================
+\chapter{Modélisation des données}
+
+\section{Diagramme de classes UML}
+
+\begin{lstlisting}[caption={Diagramme UML --- Classes du domaine},
+                   label={lst:umlClasses}]
+@startuml
+title Diagramme de classes : domaine S-GRM
+
+abstract class Ressource {
+  +id : int
+  +nom : string
+  +marque : string
+  +prix_unitaire_mad : decimal
+  +etat : EtatRessource
+  +date_creation : datetime
+  +code_barres : string
+  --
+  +afficherFiche() : void
+  +affecter(cible) : void
+  +mettreEnPanne() : void
+}
+
+class Ordinateur {
+  +cpu : string
+  +ram : string
+  +hdd : string
+  +ecran : string
+}
+
+class Imprimante {
+  +vitesse_impression : string
+  +resolution : string
+}
+
+class Fournisseur {
+  +id : int
+  +nom : string
+  +ville : string
+  +adresse : string
+  +site_web : string
+  +nom_responsable : string
+  +telephone : string
+  +statut : StatutFournisseur
+  +motif_liste_noire : string
+  --
+  +peutSoumettreOffre() : bool
+  +mettreEnListeNoire(motif) : void
+}
+
+class AppelOffres {
+  +id : int
+  +titre : string
+  +description : string
+  +budget_max_mad : decimal
+  +date_cloture : date
+  +statut : StatutAO
+  --
+  +cloturer() : void
+  +selectionnerMoinsDisant() : Offre
+}
+
+class Offre {
+  +id : int
+  +date_livraison : date
+  +garantie_mois : int
+  +marque : string
+  +prix_unitaire_mad : decimal
+  +prix_total_mad : decimal
+  +statut : StatutOffre
+}
+
+class ConstatDePanne {
+  +id : int
+  +date_constat : date
+  +nature_panne : NaturePanne
+  +description : text
+  +frequence : Frequence
+  +urgence : Urgence
+  +solution : text
+}
+
+enum StatutFournisseur {
+  ACTIF
+  LISTE_NOIRE
+}
+
+enum EtatRessource {
+  DISPONIBLE
+  EN_SERVICE
+  EN_PANNE
+  REFORME
+}
+
+enum NaturePanne {
+  MATERIELLE
+  LOGICIELLE
+}
+
+enum Frequence {
+  RARE
+  FREQUENTE
+  PERMANENTE
+}
+
+' Heritage
+Ressource <|-- Ordinateur
+Ressource <|-- Imprimante
+
+' Associations
+Fournisseur "1" -- "0..*" Ressource : fournit >
+Fournisseur "1" -- "0..*" Offre     : soumet >
+AppelOffres "1" -- "0..*" Offre     : recoit >
+Ressource   "1" -- "0..*" ConstatDePanne : subit >
+@enduml
+\end{lstlisting}
+
+\section{Dictionnaire de données}
+
+\subsection{Entité \texttt{Ressource} (abstraite)}
+
+\begin{longtable}{p{4cm} p{3.5cm} p{6cm}}
+\toprule
+\textbf{Attribut} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\endhead
+\texttt{id} & SERIAL & Clé primaire auto-incrémentée. \\
+\texttt{nom} & VARCHAR(255) & Libellé de la ressource. \\
+\texttt{marque} & VARCHAR(255) & Fabricant. \\
+\texttt{prix\_unitaire\_mad} & DECIMAL(12,2) & Prix unitaire en
+\mad{} (toujours positif). \\
+\texttt{etat} & ENUM & disponible / en\_service / en\_panne /
+reforme. \\
+\texttt{specifications} & JSONB & Spécifications techniques
+polymorphes selon le type. \\
+\texttt{fournisseur\_id} & INT & FK vers \texttt{fournisseurs.id}. \\
+\texttt{code\_barres} & VARCHAR(64) & Code-barres unique. \\
+\texttt{date\_creation} & TIMESTAMP & Date d'inventoriage. \\
+\texttt{date\_modification} & TIMESTAMP & Date de dernière mise à jour. \\
+\bottomrule
+\caption{Dictionnaire --- Ressource}
+\label{tab:dictRessource}
+\end{longtable}
+
+\subsection{Entité \texttt{Fournisseur}}
+
+\begin{longtable}{p{4cm} p{3.5cm} p{6cm}}
+\toprule
+\textbf{Attribut} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\endhead
+\texttt{id} & SERIAL & Clé primaire. \\
+\texttt{nom} & VARCHAR(255) & Raison sociale. \\
+\texttt{ville} & VARCHAR(120) & Localisation principale. \\
+\texttt{adresse} & TEXT & Adresse postale complète. \\
+\texttt{site\_web} & VARCHAR(255) & URL officielle. \\
+\texttt{nom\_responsable} & VARCHAR(255) & Interlocuteur. \\
+\texttt{telephone} & VARCHAR(20) & Numéro de téléphone. \\
+\texttt{statut} & ENUM & actif / liste\_noire. \\
+\texttt{motif\_liste\_noire} & TEXT & Justification obligatoire
+si statut = liste\_noire. \\
+\texttt{date\_creation} & TIMESTAMP & Inscription. \\
+\texttt{date\_modification} & TIMESTAMP & Mise à jour. \\
+\bottomrule
+\caption{Dictionnaire --- Fournisseur}
+\label{tab:dictFournisseur}
+\end{longtable}
+
+\subsection{Entité \texttt{ConstatDePanne}}
+
+\begin{longtable}{p{4cm} p{3.5cm} p{6cm}}
+\toprule
+\textbf{Attribut} & \textbf{Type} & \textbf{Description} \\
+\midrule
+\endhead
+\texttt{id} & SERIAL & Clé primaire. \\
+\texttt{ressource\_id} & INT & FK vers \texttt{ressources.id}. \\
+\texttt{date\_constat} & DATE & Date d'apparition. \\
+\texttt{nature\_panne} & ENUM & matérielle / logicielle (forcée
+matérielle si Imprimante). \\
+\texttt{description} & TEXT & Explication détaillée. \\
+\texttt{frequence} & ENUM & rare / fréquente / permanente. \\
+\texttt{urgence} & ENUM & basse / moyenne / haute / critique. \\
+\texttt{solution} & TEXT & Action correctrice apportée. \\
+\texttt{date\_creation} & TIMESTAMP & Date de création de la
+trace. \\
+\bottomrule
+\caption{Dictionnaire --- Constat de Panne}
+\label{tab:dictConstat}
+\end{longtable}
+
+\subsection{Relations principales}
+
+\begin{itemize}
+  \item Un \fournisseur{} \textbf{fournit} 0..* \ressource{}.
+  \item Un \fournisseur{} \textbf{soumet} 0..* \emph{Offres}.
+  \item Une \ressource{} \textbf{subit} 0..* \constat{}.
+  \item Un \emph{Appel d'offres} \textbf{reçoit} 0..* \emph{Offres}.
+  \item L'héritage \textbf{Ressource $\leftarrow$ Ordinateur},
+    \textbf{Ressource $\leftarrow$ Imprimante} est implémenté
+    par discriminateur \texttt{type} + \texttt{specifications JSONB}
+    (héritage de table simple).
+\end{itemize}
+
+% ============================================================
+% CHAPITRE 3 — Architectures physique et logique
+% ============================================================
+\chapter{Architectures physique et logique}
+
+\section{Diagramme de composants}
+
+\begin{lstlisting}[caption={Diagramme UML --- Composants},
+                   label={lst:umlComposants}]
+@startuml
+title Diagramme de composants : interaction des couches
+
+package "Navigateur (Client)" {
+  [Composants React] as React
+  [Service apiService.js] as ApiSvc
+}
+
+package "Serveur applicatif" {
+  [Express.js] as Express
+  [Controleurs] as Ctrl
+  [Services metier] as Svc
+  [Depots Sequelize] as Repo
+}
+
+database "PostgreSQL" as PG
+
+React --> ApiSvc : appels fetch/JSON
+ApiSvc --> Express : HTTPS/REST (JSON)
+Express --> Ctrl
+Ctrl --> Svc : delegation logique
+Svc --> Repo : appels CRUD
+Repo --> PG : SQL via Sequelize ORM
+
+@enduml
+\end{lstlisting}
+
+\subsection{Commentaire}
+
+Le composant \texttt{Service apiService.js} matérialise la
+\emph{façade} HTTP côté client~: il centralise les appels
+\texttt{fetch}, normalise le format des réponses
+(\texttt{\{succes, donnees, message\}}) et abstrait les composants
+React de la complexité du protocole.
+
+\section{Diagramme de déploiement}
+
+\begin{lstlisting}[caption={Diagramme UML --- Déploiement Docker},
+                   label={lst:umlDeploiement}]
+@startuml
+title Diagramme de deploiement : conteneurs Docker
+
+node "Hote Docker (Linux)" as Host {
+
+  node "Conteneur grm_frontend" {
+    component "Nginx (servant React build)" as Nginx
+  }
+
+  node "Conteneur grm_backend" {
+    component "Node.js + Express" as Node
+  }
+
+  node "Conteneur grm_postgres" {
+    database "PostgreSQL 16" as PG
+    folder "Volume grm_donnees_postgres" as Vol
+  }
+
+  Nginx --> Node : proxy /api -> backend:3001
+  Node --> PG : SQL (Sequelize) sur reseau bridge
+  PG --> Vol : persistance des donnees
+}
+
+actor "Utilisateur (navigateur)" as User
+User --> Nginx : HTTP/80
+@enduml
+\end{lstlisting}
+
+\subsection{Commentaire}
+
+Trois conteneurs orchestrés par \texttt{docker-compose}~: le
+frontend Nginx (port 80, qui sert les fichiers statiques React
+et joue le rôle de \emph{reverse proxy} vers le backend), le
+backend Express (port interne 3001) et la base PostgreSQL
+(volume nommé \texttt{grm\_donnees\_postgres} pour la
+persistance entre redémarrages). Tous les conteneurs partagent
+un réseau Docker bridge \texttt{reseau\_grm}, ce qui leur
+permet de se résoudre mutuellement par leur nom de service.
+
+\section{Diagramme de packages (organisation du code source)}
+
+\begin{lstlisting}[caption={Diagramme UML --- Packages backend},
+                   label={lst:umlPackages}]
+@startuml
+title Organisation du code source backend
+
+package "src" {
+  package "config" {
+    [BaseDeDonnees.js]
+  }
+  package "models" {
+    [Ressource.js]
+    [Fournisseur.js]
+    [ConstatDePanne.js]
+    [index.js]
+  }
+  package "repositories" {
+    [DepotDeBase.js]
+    [DepotRessource.js]
+    [DepotFournisseur.js]
+    [DepotConstatDePanne.js]
+  }
+  package "factories" {
+    [FabriqueRessource.js]
+  }
+  package "services" {
+    [ServiceRessource.js]
+    [ServiceFournisseur.js]
+    [ServiceConstatDePanne.js]
+  }
+  package "controllers" {
+    [ControleurRessource.js]
+    [ControleurFournisseur.js]
+    [ControleurConstatDePanne.js]
+  }
+  package "routes" {
+    [routesRessource.js]
+    [routesFournisseur.js]
+    [routesConstatDePanne.js]
+  }
+  [app.js]
+}
+
+[app.js] --> [routes]
+[routes] --> [controllers]
+[controllers] --> [services]
+[services] --> [repositories]
+[services] --> [factories]
+[repositories] --> [models]
+[models] --> [config]
+@enduml
+\end{lstlisting}
+
+% ============================================================
+% CHAPITRE 4 — Comportement système
+% ============================================================
+\chapter{Comportement système : diagramme de séquence}
+
+\section{Scénario : un fournisseur soumet une offre chiffrée en MAD}
+
+\subsection{Code PlantUML --- Diagramme de séquence}
+
+\begin{lstlisting}[caption={Séquence --- Soumission d'une offre par un fournisseur},
+                   label={lst:umlSequence}]
+@startuml
+title Sequence : soumission d'une offre chiffree en MAD
+
+actor Fournisseur as F
+boundary "React\n(FormulaireOffre)" as UI
+control "apiService.js" as Api
+participant "Express\n(Routeur)"     as Rt
+participant "ControleurFournisseur"  as Ctrl
+participant "ServiceFournisseur"     as Svc
+participant "DepotFournisseur"       as Dep
+database   "PostgreSQL"              as DB
+
+F -> UI : Saisir prix, livraison, garantie
+UI -> Api : creerOffre(payload JSON, MAD)
+Api -> Rt : POST /api/offres (JSON, TLS)
+
+Rt -> Ctrl : invoquerControleur(req, res)
+Ctrl -> Svc : validerEtCreerOffre(payload)
+
+Svc -> Dep : trouverParId(fournisseurId)
+Dep -> DB : SELECT * FROM fournisseurs WHERE id = ?
+DB --> Dep : ligne fournisseur
+Dep --> Svc : objet Fournisseur
+
+alt Statut = liste_noire
+  Svc --> Ctrl : throw "Offre rejetee : liste noire"
+  Ctrl --> Rt : 400 Bad Request
+  Rt --> Api : reponse JSON {succes:false, message}
+  Api --> UI : afficher message d'erreur
+  UI --> F : "Votre societe est sur liste noire."
+else Statut = actif
+  Svc -> Dep : creer(offre)
+  Dep -> DB : BEGIN; INSERT INTO offres (...) VALUES (...);
+  DB --> Dep : id genere
+  Dep --> Svc : Offre persistee
+  Svc -> Dep : COMMIT
+  Svc --> Ctrl : retour offre
+  Ctrl --> Rt : 201 Created + JSON
+  Rt --> Api : reponse {succes:true, donnees}
+  Api --> UI : confirmer creation
+  UI --> F : "Offre soumise avec succes."
+end
+@enduml
+\end{lstlisting}
+
+\subsection{Explication technique pas à pas}
+
+\begin{enumerate}[leftmargin=*]
+  \item \textbf{Saisie côté client.} Le composant React
+    \texttt{FormulaireOffre} maintient un état local via
+    \texttt{useState}. À la soumission, il appelle la fonction
+    \texttt{creerOffre} du service \texttt{apiService.js}.
+  \item \textbf{Préparation de la requête HTTP.} Le service
+    construit un objet JSON contenant les champs de l'offre, en
+    s'assurant que \texttt{prix\_unitaire\_mad} est un nombre,
+    puis émet une requête \texttt{POST /api/offres} avec en-tête
+    \texttt{Content-Type: application/json}. Le canal est
+    sécurisé par TLS conformément à \texttt{ENF-S01}.
+  \item \textbf{Routage Express.} Express consomme le corps via
+    le middleware \texttt{express.json()}, applique CORS, puis
+    aiguille la requête vers le routeur \texttt{routesFournisseur}
+    qui invoque la fonction de contrôleur appropriée.
+  \item \textbf{Délégation au service.} Le contrôleur effectue
+    une validation minimale (présence des champs obligatoires)
+    et délègue la logique métier au \texttt{ServiceFournisseur}.
+  \item \textbf{Vérification du statut.} Le service interroge le
+    \texttt{DepotFournisseur} qui exécute une requête
+    \texttt{SELECT} ciblée sur la clé primaire. Si le statut est
+    \texttt{liste\_noire}, une exception est levée et propagée
+    en HTTP 400 (sans persistance de l'offre).
+  \item \textbf{Insertion transactionnelle.} Si le statut est
+    \texttt{actif}, le service ouvre une transaction (BEGIN),
+    insère l'offre, puis valide (COMMIT). Sequelize gère ces
+    appels via une connexion poolée.
+  \item \textbf{Réponse au client.} Le contrôleur renvoie
+    \texttt{201 Created} avec un payload JSON normalisé. La
+    couche React met à jour l'interface et affiche un toast de
+    confirmation à l'utilisateur.
+  \item \textbf{Journalisation d'audit.} Un middleware annexe
+    enregistre l'événement (qui, quand, quoi) dans la table
+    \texttt{journal\_audit}, conformément à l'exigence
+    \texttt{ENF-T03}.
+\end{enumerate}
+
+\section{Conclusion}
+
+Le présent document a couvert l'intégralité du périmètre
+fonctionnel et technique du Système de Gestion des Ressources
+Matérielles. Les choix d'architecture — trois-tiers, stack PERN,
+patrons MVC/Repository/Factory/Singleton — répondent
+rigoureusement aux exigences fonctionnelles et non-fonctionnelles
+formulées par la maîtrise d'ouvrage. L'ensemble des diagrammes
+PlantUML fournis sont directement intégrables à un environnement
+de génération automatique de documentation (par exemple via
+\texttt{plantuml.jar}). Les futures itérations pourront porter
+sur l'authentification fédérée SSO, la dématérialisation
+complète des bons de commande et l'intégration d'un module
+décisionnel (BI) couplé aux indicateurs de pannes.
+
+\appendix
+\chapter*{Annexe A --- Glossaire}
+\addcontentsline{toc}{chapter}{Annexe A --- Glossaire}
+
+\begin{description}[leftmargin=*]
+  \item[ACID] Atomicité, Cohérence, Isolation, Durabilité.
+  \item[BPMN] Business Process Model and Notation.
+  \item[CRUD] Create, Read, Update, Delete.
+  \item[MAD] Dirham marocain, monnaie officielle.
+  \item[MVC] Modèle--Vue--Contrôleur.
+  \item[ORM] Object-Relational Mapping.
+  \item[PERN] PostgreSQL + Express + React + Node.
+  \item[REST] Representational State Transfer.
+  \item[S-GRM] Système de Gestion des Ressources Matérielles.
+  \item[SSO] Single Sign-On.
+  \item[TLS] Transport Layer Security.
+\end{description}
+
+\end{document}

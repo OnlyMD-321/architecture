@@ -1,0 +1,150 @@
+# ==============================================================
+# DOCKER COMPOSE — Orchestration de l'environnement complet
+# ==============================================================
+# Services :
+#   1. postgres  — Base de données PostgreSQL
+#   2. backend   — API Node.js/Express
+#   3. frontend  — Application React servie par Nginx
+#
+# Réseau :
+#   Tous les services communiquent via un réseau Docker bridge
+#   nommé "reseau_grm" (Gestion Ressources Matérielles).
+#   Le frontend accède au backend via le nom de service "backend"
+#   grâce à la résolution DNS interne de Docker.
+# ==============================================================
+
+services:
+
+  # ==============================================================
+  # SERVICE 1 : Base de données PostgreSQL
+  # ==============================================================
+  # Stocke toutes les données de l'application (ressources,
+  # fournisseurs, constats de panne). Un volume nommé assure
+  # la persistance des données entre les redémarrages.
+  # ==============================================================
+  postgres:
+    image: postgres:16-alpine
+    container_name: grm_postgres
+    restart: unless-stopped
+    environment:
+      # Identifiants de la base de données
+      POSTGRES_DB: gestion_ressources
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      # Exposition du port PostgreSQL pour accès local (debug)
+      - "5432:5432"
+    volumes:
+      # Volume nommé pour la persistance des données PostgreSQL
+      - donnees_postgres:/var/lib/postgresql/data
+    networks:
+      # Connexion au réseau interne de l'application
+      - reseau_grm
+    healthcheck:
+      # Vérification que PostgreSQL accepte les connexions
+      test: ["CMD-SHELL", "pg_isready -U postgres -d gestion_ressources"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+
+  # ==============================================================
+  # SERVICE 2 : Backend — API Node.js/Express
+  # ==============================================================
+  # Expose l'API REST sur le port 3001.
+  # Attend que PostgreSQL soit prêt avant de démarrer (depends_on).
+  # Les variables d'environnement configurent la connexion DB.
+  # ==============================================================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: grm_backend
+    restart: unless-stopped
+    environment:
+      # Configuration de la connexion à la base de données
+      # "postgres" fait référence au nom du service Docker (résolution DNS)
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gestion_ressources
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      # Port d'écoute du serveur Express
+      PORT: 3001
+      NODE_ENV: production
+    ports:
+      # Exposition du port de l'API pour accès direct (debug/Postman)
+      - "3001:3001"
+    depends_on:
+      # Démarrage conditionnel : attend que PostgreSQL soit sain
+      postgres:
+        condition: service_healthy
+    networks:
+      # Même réseau que PostgreSQL pour la communication inter-services
+      - reseau_grm
+    healthcheck:
+      # Vérification que l'API Express répond correctement
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/api/sante"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+  # ==============================================================
+  # SERVICE 3 : Frontend — React via Nginx
+  # ==============================================================
+  # Sert l'application React compilée et fait office de proxy
+  # inverse vers le backend pour les requêtes /api.
+  # Accessible sur le port 80 (HTTP standard).
+  # ==============================================================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        # URL de l'API — en production, les requêtes /api sont
+        # routées par Nginx vers le service backend
+        REACT_APP_API_URL: /api
+    container_name: grm_frontend
+    restart: unless-stopped
+    ports:
+      # Port d'accès principal de l'application (navigateur)
+      - "80:80"
+    depends_on:
+      # Attend que le backend soit opérationnel avant de démarrer
+      backend:
+        condition: service_healthy
+    networks:
+      # Connexion au réseau pour le proxy inverse vers le backend
+      - reseau_grm
+    healthcheck:
+      # Vérification que Nginx sert les fichiers statiques
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 15s
+
+# ==============================================================
+# RÉSEAU — Réseau bridge isolé pour l'application
+# ==============================================================
+# Le réseau "reseau_grm" permet aux trois services de communiquer
+# entre eux via leurs noms de service (DNS interne Docker).
+# Exemple : le backend accède à PostgreSQL via "postgres:5432"
+#           le frontend accède au backend via "backend:3001"
+# ==============================================================
+networks:
+  reseau_grm:
+    driver: bridge
+    name: reseau_gestion_ressources
+
+# ==============================================================
+# VOLUMES — Persistance des données
+# ==============================================================
+# Le volume nommé "donnees_postgres" garantit que les données
+# de la base PostgreSQL survivent aux redémarrages et
+# reconstructions des conteneurs.
+# ==============================================================
+volumes:
+  donnees_postgres:
+    name: grm_donnees_postgres
