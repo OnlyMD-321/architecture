@@ -10,6 +10,7 @@ import FormulaireConstat from './FormulaireConstat';
 import useApi from '../../hooks/useApi';
 import useToast from '../../hooks/useToast';
 import { recupererConstats } from '../../services/apiService';
+import { useAuth } from '../../contexts/AuthContext';
 import { MdAdd, MdWarning } from 'react-icons/md';
 
 const OPTIONS_URGENCE = [
@@ -63,6 +64,8 @@ export default function PageConstats() {
   const [filtreNature, setFiltreNature] = useState('');
   const [modalAjouter, setModalAjouter] = useState(false);
   const { toasts, ajouterToast, supprimerToast } = useToast();
+  const { aLeDroit } = useAuth();
+  const peutCreer = aLeDroit('admin', 'responsable', 'technicien');
 
   const charger = useCallback(() => recupererConstats(), []);
   const { donnees, chargement, executer: recharger } = useApi(charger, { immediat: true });
@@ -91,9 +94,11 @@ export default function PageConstats() {
               options={OPTIONS_NATURE} style={{ width: '180px', fontSize: '13px' }} />
             <Select value={filtreUrgence} onChange={e => setFiltreUrgence(e.target.value)}
               options={OPTIONS_URGENCE} style={{ width: '180px', fontSize: '13px' }} />
-            <Bouton variante="primaire" icone={<MdAdd size={16} />} onClick={() => setModalAjouter(true)}>
-              Nouveau constat
-            </Bouton>
+            {peutCreer && (
+              <Bouton variante="primaire" icone={<MdAdd size={16} />} onClick={() => setModalAjouter(true)}>
+                Nouveau constat
+              </Bouton>
+            )}
           </>
         }
       >
@@ -106,11 +111,11 @@ export default function PageConstats() {
               icone={<MdWarning />}
               titre="Aucun constat de panne"
               description="Aucun constat enregistré pour les filtres sélectionnés."
-              action={
+              action={peutCreer && (
                 <Bouton variante="primaire" icone={<MdAdd size={16} />} onClick={() => setModalAjouter(true)}>
                   Nouveau constat
                 </Bouton>
-              }
+              )}
             />
           }
         />

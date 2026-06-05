@@ -12,9 +12,17 @@
  */
 
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const { app } = require('../../src/app');
 const BaseDeDonnees = require('../../src/config/BaseDeDonnees');
 const { Ressource, Fournisseur, ConstatDePanne } = require('../../src/models');
+
+const JWT_SECRET = process.env.JWT_SECRET || 'grm_secret_dev_2026';
+const TOKEN_TEST = jwt.sign(
+  { id: 1, email: 'tech@test.ma', role: 'technicien', nom: 'Technicien Test' },
+  JWT_SECRET,
+  { expiresIn: '1h' }
+);
 
 describe('API Constats de Panne — Tests d\'intégration', () => {
   let ressourceTest;
@@ -80,6 +88,7 @@ describe('API Constats de Panne — Tests d\'intégration', () => {
      */
     const reponse = await request(app)
       .post('/api/constats')
+      .set('Authorization', `Bearer ${TOKEN_TEST}`)
       .send(donneesConstat)
       .expect('Content-Type', /json/);
 
@@ -117,6 +126,7 @@ describe('API Constats de Panne — Tests d\'intégration', () => {
 
     const reponse = await request(app)
       .post('/api/constats')
+      .set('Authorization', `Bearer ${TOKEN_TEST}`)
       .send(donneesIncompletes)
       .expect('Content-Type', /json/);
 
@@ -136,6 +146,7 @@ describe('API Constats de Panne — Tests d\'intégration', () => {
 
     const reponse = await request(app)
       .post('/api/constats')
+      .set('Authorization', `Bearer ${TOKEN_TEST}`)
       .send(donneesConstat)
       .expect('Content-Type', /json/);
 
@@ -147,6 +158,7 @@ describe('API Constats de Panne — Tests d\'intégration', () => {
   test('GET /api/constats — doit lister les constats existants', async () => {
     const reponse = await request(app)
       .get('/api/constats')
+      .set('Authorization', `Bearer ${TOKEN_TEST}`)
       .expect('Content-Type', /json/);
 
     expect(reponse.status).toBe(200);
@@ -184,6 +196,7 @@ describe('API Constats de Panne — Tests d\'intégration', () => {
 
     const reponse = await request(app)
       .post('/api/constats')
+      .set('Authorization', `Bearer ${TOKEN_TEST}`)
       .send(constatInvalide)
       .expect('Content-Type', /json/);
 

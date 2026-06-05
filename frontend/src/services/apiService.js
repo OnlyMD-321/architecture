@@ -1,5 +1,13 @@
 const URL_BASE_API = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
+function _headers(avecContenu = true) {
+  const token = localStorage.getItem('grm_token');
+  return {
+    ...(avecContenu ? { 'Content-Type': 'application/json' } : {}),
+    ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+  };
+}
+
 async function _gererReponse(reponse) {
   if (!reponse.ok) {
     let erreur = {};
@@ -9,65 +17,63 @@ async function _gererReponse(reponse) {
   return reponse.json();
 }
 
+export async function seConnecter(email, mot_de_passe) {
+  return _gererReponse(await fetch(`${URL_BASE_API}/auth/connexion`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, mot_de_passe }),
+  }));
+}
+
 export async function recupererRessources(filtre = '') {
   const parametres = filtre ? `?type=${encodeURIComponent(filtre)}` : '';
-  return _gererReponse(await fetch(`${URL_BASE_API}/ressources${parametres}`));
+  return _gererReponse(await fetch(`${URL_BASE_API}/ressources${parametres}`, { headers: _headers(false) }));
 }
 
 export async function creerRessource(donneesRessource) {
   return _gererReponse(await fetch(`${URL_BASE_API}/ressources`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(donneesRessource),
+    method: 'POST', headers: _headers(), body: JSON.stringify(donneesRessource),
   }));
 }
 
 export async function mettreAJourRessource(id, donneesRessource) {
   return _gererReponse(await fetch(`${URL_BASE_API}/ressources/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(donneesRessource),
+    method: 'PUT', headers: _headers(), body: JSON.stringify(donneesRessource),
   }));
 }
 
 export async function supprimerRessource(id) {
   return _gererReponse(await fetch(`${URL_BASE_API}/ressources/${id}`, {
-    method: 'DELETE',
+    method: 'DELETE', headers: _headers(false),
   }));
 }
 
 export async function recupererFournisseurs() {
-  return _gererReponse(await fetch(`${URL_BASE_API}/fournisseurs`));
+  return _gererReponse(await fetch(`${URL_BASE_API}/fournisseurs`, { headers: _headers(false) }));
 }
 
 export async function creerFournisseur(donneesFournisseur) {
   return _gererReponse(await fetch(`${URL_BASE_API}/fournisseurs`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(donneesFournisseur),
+    method: 'POST', headers: _headers(), body: JSON.stringify(donneesFournisseur),
   }));
 }
 
 export async function mettreEnListeNoire(id, motif) {
   return _gererReponse(await fetch(`${URL_BASE_API}/fournisseurs/${id}/liste-noire`, {
-    method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ motif }),
+    method: 'PATCH', headers: _headers(), body: JSON.stringify({ motif }),
   }));
 }
 
 export async function enregistrerConstat(donneesConstat) {
   return _gererReponse(await fetch(`${URL_BASE_API}/constats`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(donneesConstat),
+    method: 'POST', headers: _headers(), body: JSON.stringify(donneesConstat),
   }));
 }
 
 export async function recupererConstats() {
-  return _gererReponse(await fetch(`${URL_BASE_API}/constats`));
+  return _gererReponse(await fetch(`${URL_BASE_API}/constats`, { headers: _headers(false) }));
 }
 
 export async function recupererConstatsRessource(id) {
-  return _gererReponse(await fetch(`${URL_BASE_API}/constats/ressource/${id}`));
+  return _gererReponse(await fetch(`${URL_BASE_API}/constats/ressource/${id}`, { headers: _headers(false) }));
 }

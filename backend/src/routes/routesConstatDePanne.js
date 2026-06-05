@@ -1,20 +1,12 @@
-/**
- * Routes — Constats de Panne (Maintenance)
- * Définit les endpoints REST pour les rapports de pannes.
- */
-
 const { Router } = require('express');
 const controleur = require('../controllers/ControleurConstatDePanne');
+const auth = require('../middlewares/authentification');
+const autoriser = require('../middlewares/autorisation');
 
 const routeur = Router();
 
-/** Lister tous les constats de panne */
-routeur.get('/', controleur.listerConstats);
-
-/** Enregistrer un nouveau constat de panne */
-routeur.post('/', controleur.enregistrerConstat);
-
-/** Lister les constats pour une ressource spécifique */
-routeur.get('/ressource/:ressourceId', controleur.listerConstatsParRessource);
+routeur.get('/',                          auth, controleur.listerConstats);
+routeur.get('/ressource/:ressourceId',    auth, controleur.listerConstatsParRessource);
+routeur.post('/',                         auth, autoriser('admin', 'responsable', 'technicien'), controleur.enregistrerConstat);
 
 module.exports = routeur;

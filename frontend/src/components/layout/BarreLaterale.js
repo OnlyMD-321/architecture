@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { NavLink } from 'react-router-dom';
-import { MdDashboard, MdComputer, MdBusinessCenter, MdWarning } from 'react-icons/md';
-import { couleurs, polices, disposition } from '../../theme/tokens';
+import { MdDashboard, MdComputer, MdBusinessCenter, MdWarning, MdLogout } from 'react-icons/md';
+import { useAuth } from '../../contexts/AuthContext';
+import { couleurs, polices, rayons, disposition } from '../../theme/tokens';
 
 const NAVIGATION = [
   { chemin: '/tableau-de-bord', libelle: 'Tableau de bord', icone: MdDashboard },
@@ -40,7 +41,17 @@ function LienNav({ chemin, libelle, Icone }) {
   );
 }
 
+const ROLES_LABELS = {
+  admin: { libelle: 'Administrateur', fond: couleurs.violet[100], texte: couleurs.violet[600] },
+  responsable: { libelle: 'Responsable', fond: couleurs.info[100], texte: couleurs.info[600] },
+  technicien: { libelle: 'Technicien', fond: couleurs.alerte[100], texte: couleurs.alerte[600] },
+  lecteur: { libelle: 'Lecteur', fond: couleurs.neutre[100], texte: couleurs.neutre[600] },
+};
+
 export default function BarreLaterale() {
+  const { utilisateur, deconnecter } = useAuth();
+  const roleInfo = utilisateur ? (ROLES_LABELS[utilisateur.role] || ROLES_LABELS.lecteur) : null;
+
   return (
     <aside style={{
       position: 'fixed',
@@ -87,17 +98,56 @@ export default function BarreLaterale() {
         ))}
       </nav>
 
-      {/* Pied */}
-      <div style={{
-        padding: '12px 16px',
-        borderTop: '1px solid rgba(255,255,255,0.10)',
-        fontSize: polices.tailles.xs,
-        color: 'rgba(255,255,255,0.40)',
-        fontFamily: polices.famille,
-        textAlign: 'center',
-      }}>
-        © 2026 GRM — v1.0
-      </div>
+      {/* Utilisateur connecté */}
+      {utilisateur && (
+        <div style={{
+          padding: '12px 16px',
+          borderTop: '1px solid rgba(255,255,255,0.10)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+            <div style={{
+              width: '32px', height: '32px', borderRadius: '50%', flexShrink: 0,
+              backgroundColor: couleurs.primaire[600],
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '13px', fontWeight: 700, color: couleurs.blanc, fontFamily: polices.famille,
+            }}>
+              {utilisateur.nom?.charAt(0).toUpperCase() || '?'}
+            </div>
+            <div style={{ minWidth: 0 }}>
+              <p style={{ margin: 0, fontSize: polices.tailles.sm, fontWeight: polices.graisses.semi, color: couleurs.blanc, fontFamily: polices.famille, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {utilisateur.nom}
+              </p>
+              {roleInfo && (
+                <span style={{
+                  display: 'inline-block', marginTop: '2px',
+                  padding: '1px 6px', borderRadius: rayons.complet,
+                  fontSize: '10px', fontWeight: polices.graisses.semi,
+                  backgroundColor: roleInfo.fond, color: roleInfo.texte,
+                  fontFamily: polices.famille,
+                }}>
+                  {roleInfo.libelle}
+                </span>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={deconnecter}
+            style={{
+              width: '100%', display: 'flex', alignItems: 'center', gap: '8px',
+              padding: '7px 10px', borderRadius: rayons.md,
+              backgroundColor: 'transparent', border: '1px solid rgba(255,255,255,0.15)',
+              color: 'rgba(255,255,255,0.65)', cursor: 'pointer',
+              fontSize: polices.tailles.xs, fontFamily: polices.famille,
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={e => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.color = couleurs.blanc; }}
+            onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent'; e.currentTarget.style.color = 'rgba(255,255,255,0.65)'; }}
+          >
+            <MdLogout size={14} />
+            Se déconnecter
+          </button>
+        </div>
+      )}
     </aside>
   );
 }

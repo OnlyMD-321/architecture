@@ -4,8 +4,9 @@
  */
 
 require('dotenv').config();
+const bcrypt = require('bcryptjs');
 const BaseDeDonnees = require('./src/config/BaseDeDonnees');
-const { Fournisseur, Ressource, ConstatDePanne } = require('./src/models');
+const { Fournisseur, Ressource, ConstatDePanne, Utilisateur } = require('./src/models');
 
 /* ============================================================
  * DONNÉES — Fournisseurs (12 entrées : 9 actifs, 3 liste noire)
@@ -773,6 +774,17 @@ async function seed() {
   console.log('🗑️  Suppression et recréation des tables...');
   await bdd.synchroniser({ force: true });
 
+  // 0. Utilisateurs
+  console.log('👤 Insertion des utilisateurs...');
+  const motDePasse = await bcrypt.hash('password123', 10);
+  await Promise.all([
+    Utilisateur.create({ nom: 'Administrateur Système', email: 'admin@grm.ma',       mot_de_passe_hash: motDePasse, role: 'admin' }),
+    Utilisateur.create({ nom: 'Responsable Ressources', email: 'responsable@grm.ma', mot_de_passe_hash: motDePasse, role: 'responsable' }),
+    Utilisateur.create({ nom: 'Technicien Support',     email: 'technicien@grm.ma',  mot_de_passe_hash: motDePasse, role: 'technicien' }),
+    Utilisateur.create({ nom: 'Lecteur Consultant',     email: 'lecteur@grm.ma',     mot_de_passe_hash: motDePasse, role: 'lecteur' }),
+  ]);
+  console.log('   ✓ 4 utilisateurs insérés');
+
   // 1. Fournisseurs
   console.log('🏢 Insertion des fournisseurs...');
   const fournisseursInseres = await Promise.all(
@@ -800,6 +812,7 @@ async function seed() {
   const enPanne = ressourcesInserees.filter(r => r.etat === 'en_panne').length;
   const listesNoires = fournisseursInseres.filter(f => f.statut === 'liste_noire').length;
   console.log('\n✅ Base de données peuplée avec succès !');
+  console.log(`   👤 4 utilisateurs (admin / responsable / technicien / lecteur) — mot de passe : password123`);
   console.log(`   📦 ${fournisseursInseres.length} fournisseurs (${listesNoires} en liste noire)`);
   console.log(`   🖥️  ${ressourcesInserees.length} ressources (${enPanne} en panne)`);
   console.log(`   🔧 ${constatsInseres.length} constats de panne`);

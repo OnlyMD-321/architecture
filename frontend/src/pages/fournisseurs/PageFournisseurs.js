@@ -10,6 +10,7 @@ import ModalListeNoire from './ModalListeNoire';
 import useApi from '../../hooks/useApi';
 import useToast from '../../hooks/useToast';
 import { recupererFournisseurs } from '../../services/apiService';
+import { useAuth } from '../../contexts/AuthContext';
 import { couleurs } from '../../theme/tokens';
 import { MdAdd, MdBlock, MdBusinessCenter } from 'react-icons/md';
 
@@ -40,6 +41,8 @@ export default function PageFournisseurs() {
   const [modalAjouter, setModalAjouter] = useState(false);
   const [fournisseurListeNoire, setFournisseurListeNoire] = useState(null);
   const { toasts, ajouterToast, supprimerToast } = useToast();
+  const { aLeDroit } = useAuth();
+  const peutModifier = aLeDroit('admin', 'responsable');
 
   const charger = useCallback(() => recupererFournisseurs(), []);
   const { donnees, chargement, executer: recharger } = useApi(charger, { immediat: true });
@@ -56,11 +59,11 @@ export default function PageFournisseurs() {
       <Carte
         titre="Gestion des fournisseurs"
         sousTitre={`${fournisseurs.length} fournisseur${fournisseurs.length !== 1 ? 's' : ''} référencé${fournisseurs.length !== 1 ? 's' : ''}`}
-        actions={
+        actions={peutModifier && (
           <Bouton variante="primaire" icone={<MdAdd size={16} />} onClick={() => setModalAjouter(true)}>
             Nouveau fournisseur
           </Bouton>
-        }
+        )}
       >
         <Tableau
           colonnes={COLONNES}
@@ -78,7 +81,7 @@ export default function PageFournisseurs() {
               }
             />
           }
-          actions={(ligne) => (
+          actions={peutModifier ? (ligne) => (
             ligne.statut !== 'liste_noire' ? (
               <button
                 title="Mettre en liste noire"
@@ -96,7 +99,7 @@ export default function PageFournisseurs() {
                 <MdBlock size={15} />
               </button>
             ) : null
-          )}
+          ) : null}
         />
       </Carte>
 

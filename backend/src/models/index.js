@@ -6,6 +6,7 @@
 const Fournisseur = require('./Fournisseur');
 const Ressource = require('./Ressource');
 const ConstatDePanne = require('./ConstatDePanne');
+const Utilisateur = require('./Utilisateur');
 
 /* ============================================================
  * ASSOCIATIONS — Relations entre les modèles
@@ -39,4 +40,5 @@ module.exports = {
   Fournisseur,
   Ressource,
   ConstatDePanne,
+  Utilisateur,
 };

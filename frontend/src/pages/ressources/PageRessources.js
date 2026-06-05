@@ -11,6 +11,7 @@ import ModalConfirmationSuppression from './ModalConfirmationSuppression';
 import useApi from '../../hooks/useApi';
 import useToast from '../../hooks/useToast';
 import { recupererRessources } from '../../services/apiService';
+import { useAuth } from '../../contexts/AuthContext';
 import { couleurs, polices } from '../../theme/tokens';
 import { MdAdd, MdEdit, MdDelete, MdComputer } from 'react-icons/md';
 
@@ -68,6 +69,8 @@ export default function PageRessources() {
   const [ressourceEdition, setRessourceEdition] = useState(null);
   const [ressourceSuppression, setRessourceSuppression] = useState(null);
   const { toasts, ajouterToast, supprimerToast } = useToast();
+  const { aLeDroit } = useAuth();
+  const peutModifier = aLeDroit('admin', 'responsable');
 
   const charger = useCallback(() => recupererRessources(filtreType), [filtreType]);
   const { donnees, chargement, executer: recharger } = useApi(charger, { immediat: true });
@@ -92,9 +95,11 @@ export default function PageRessources() {
               options={OPTIONS_TYPE}
               style={{ width: '180px', fontSize: '13px' }}
             />
-            <Bouton variante="primaire" icone={<MdAdd size={16} />} onClick={() => setModalAjouter(true)}>
-              Nouvelle ressource
-            </Bouton>
+            {peutModifier && (
+              <Bouton variante="primaire" icone={<MdAdd size={16} />} onClick={() => setModalAjouter(true)}>
+                Nouvelle ressource
+              </Bouton>
+            )}
           </>
         }
       >
@@ -107,14 +112,14 @@ export default function PageRessources() {
               icone={<MdComputer />}
               titre="Aucune ressource"
               description="Commencez par ajouter votre première ressource matérielle."
-              action={
+              action={peutModifier && (
                 <Bouton variante="primaire" icone={<MdAdd size={16} />} onClick={() => setModalAjouter(true)}>
                   Nouvelle ressource
                 </Bouton>
-              }
+              )}
             />
           }
-          actions={(ligne) => (
+          actions={peutModifier ? (ligne) => (
             <>
               <button
                 title="Modifier"
@@ -131,7 +136,7 @@ export default function PageRessources() {
                 <MdDelete size={15} />
               </button>
             </>
-          )}
+          ) : null}
         />
       </Carte>
 

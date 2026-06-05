@@ -24,6 +24,7 @@ const BaseDeDonnees = require('./config/BaseDeDonnees');
 const routesRessource = require('./routes/routesRessource');
 const routesFournisseur = require('./routes/routesFournisseur');
 const routesConstatDePanne = require('./routes/routesConstatDePanne');
+const routesAuth = require('./routes/routesAuth');
 
 /** Initialisation de l'application Express */
 const app = express();
@@ -46,6 +47,7 @@ app.use(express.urlencoded({ extended: true }));
  * ROUTES — Montage des routeurs sur les préfixes API
  * ============================================================ */
 
+app.use('/api/auth', routesAuth);
 app.use('/api/ressources', routesRessource);
 app.use('/api/fournisseurs', routesFournisseur);
 app.use('/api/constats', routesConstatDePanne);
