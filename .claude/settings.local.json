@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node seed.js)",
+      "Bash(psql -U postgres -c \"\\\\l\")"
+    ]
+  }
+}

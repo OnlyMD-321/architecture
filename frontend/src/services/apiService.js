@@ -1,68 +1,73 @@
-/**
- * Service API — Couche de communication avec le backend
- * Centralise tous les appels HTTP vers l'API Express.
- */
-
 const URL_BASE_API = process.env.REACT_APP_API_URL || 'http://localhost:3001/api';
 
-/**
- * Récupère la liste de toutes les ressources matérielles.
- * @param {string} [filtre] - Filtre optionnel par type ('ordinateur' ou 'imprimante')
- * @returns {Promise<object>} Réponse de l'API
- */
-export async function recupererRessources(filtre = '') {
-  const parametres = filtre ? `?type=${encodeURIComponent(filtre)}` : '';
-  const reponse = await fetch(`${URL_BASE_API}/ressources${parametres}`);
+async function _gererReponse(reponse) {
   if (!reponse.ok) {
-    throw new Error('Erreur lors de la récupération des ressources.');
+    let erreur = {};
+    try { erreur = await reponse.json(); } catch {}
+    throw new Error(erreur.message || `Erreur HTTP ${reponse.status}`);
   }
   return reponse.json();
 }
 
-/**
- * Crée une nouvelle ressource matérielle via l'API.
- * @param {object} donneesRessource - Données de la ressource
- * @returns {Promise<object>} Réponse de l'API
- */
+export async function recupererRessources(filtre = '') {
+  const parametres = filtre ? `?type=${encodeURIComponent(filtre)}` : '';
+  return _gererReponse(await fetch(`${URL_BASE_API}/ressources${parametres}`));
+}
+
 export async function creerRessource(donneesRessource) {
-  const reponse = await fetch(`${URL_BASE_API}/ressources`, {
+  return _gererReponse(await fetch(`${URL_BASE_API}/ressources`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(donneesRessource),
-  });
-  if (!reponse.ok) {
-    const erreur = await reponse.json();
-    throw new Error(erreur.message || 'Erreur lors de la création de la ressource.');
-  }
-  return reponse.json();
+  }));
 }
 
-/**
- * Récupère la liste des fournisseurs.
- * @returns {Promise<object>}
- */
+export async function mettreAJourRessource(id, donneesRessource) {
+  return _gererReponse(await fetch(`${URL_BASE_API}/ressources/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(donneesRessource),
+  }));
+}
+
+export async function supprimerRessource(id) {
+  return _gererReponse(await fetch(`${URL_BASE_API}/ressources/${id}`, {
+    method: 'DELETE',
+  }));
+}
+
 export async function recupererFournisseurs() {
-  const reponse = await fetch(`${URL_BASE_API}/fournisseurs`);
-  if (!reponse.ok) {
-    throw new Error('Erreur lors de la récupération des fournisseurs.');
-  }
-  return reponse.json();
+  return _gererReponse(await fetch(`${URL_BASE_API}/fournisseurs`));
 }
 
-/**
- * Enregistre un constat de panne.
- * @param {object} donneesConstat - Données du constat
- * @returns {Promise<object>}
- */
+export async function creerFournisseur(donneesFournisseur) {
+  return _gererReponse(await fetch(`${URL_BASE_API}/fournisseurs`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(donneesFournisseur),
+  }));
+}
+
+export async function mettreEnListeNoire(id, motif) {
+  return _gererReponse(await fetch(`${URL_BASE_API}/fournisseurs/${id}/liste-noire`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ motif }),
+  }));
+}
+
 export async function enregistrerConstat(donneesConstat) {
-  const reponse = await fetch(`${URL_BASE_API}/constats`, {
+  return _gererReponse(await fetch(`${URL_BASE_API}/constats`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(donneesConstat),
-  });
-  if (!reponse.ok) {
-    const erreur = await reponse.json();
-    throw new Error(erreur.message || 'Erreur lors de l\'enregistrement du constat.');
-  }
-  return reponse.json();
+  }));
+}
+
+export async function recupererConstats() {
+  return _gererReponse(await fetch(`${URL_BASE_API}/constats`));
+}
+
+export async function recupererConstatsRessource(id) {
+  return _gererReponse(await fetch(`${URL_BASE_API}/constats/ressource/${id}`));
 }

@@ -39,8 +39,21 @@ class BaseDeDonnees {
         dialect: 'sqlite',
         logging: false,
       });
+    } else if (process.env.DATABASE_URL) {
+      /** Connexion via URL unique (Supabase, Render, Railway, etc.) */
+      this.sequelize = new Sequelize(process.env.DATABASE_URL, {
+        dialect: 'postgres',
+        logging: false,
+        dialectOptions: {
+          ssl: {
+            require: true,
+            rejectUnauthorized: false,
+          },
+        },
+        pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
+      });
     } else {
-      /** Création de la connexion Sequelize vers PostgreSQL */
+      /** Connexion via variables individuelles (Docker Compose, local) */
       this.sequelize = new Sequelize(
         process.env.DB_NAME || 'gestion_ressources',
         process.env.DB_USER || 'postgres',
@@ -50,12 +63,7 @@ class BaseDeDonnees {
           port: parseInt(process.env.DB_PORT, 10) || 5432,
           dialect: 'postgres',
           logging: process.env.NODE_ENV === 'development' ? console.log : false,
-          pool: {
-            max: 10,
-            min: 2,
-            acquire: 30000,
-            idle: 10000,
-          },
+          pool: { max: 10, min: 2, acquire: 30000, idle: 10000 },
         }
       );
     }
